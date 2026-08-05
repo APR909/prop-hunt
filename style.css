@@ -1,0 +1,104 @@
+:root {
+  --red: #E4283C;
+  --red-bright: #FF4D67;
+  --bg: #0B0B0D;
+  --card: #17171B;
+  --ink: #F3EFEA;
+  --ink-soft: #A9A29D;
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Work Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.mono { font-family: var(--font-mono); }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.brand-mark {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+}
+.brand-name { font-family: var(--font-display); font-size: 1.2rem; }
+.brand-name em { font-style: normal; color: var(--red-bright); }
+
+.build-tag { font-size: 0.78rem; color: var(--ink-soft); }
+
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 28px;
+  padding: 36px 24px 60px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.scene-wrap {
+  position: relative;
+  flex: 1 1 700px;
+  min-width: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  line-height: 0;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: default;
+}
+
+.hud {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--red-bright);
+  margin: 0 0 8px;
+}
+
+.hud-note { font-size: 0.85rem; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+
+.instructions ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+.instructions li { font-size: 0.78rem; color: var(--ink-soft); line-height: 1.4; }
+
+@media (max-width: 720px) {
+  .stage { flex-direction: column; align-items: center; }
+  .hud { width: 100%; max-width: 460px; }
+}

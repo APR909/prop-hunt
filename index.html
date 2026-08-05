@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prop Hunt — Prototipo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#"><span class="brand-mark">AP</span><span class="brand-name">Prop <em>hunt</em></span></a>
+  <span class="build-tag mono">// fase 1 · movimiento y objetos</span>
+</header>
+
+<main class="stage">
+  <div class="scene-wrap">
+    <canvas id="scene" aria-label="Sala vista desde arriba"></canvas>
+  </div>
+
+  <aside class="hud">
+    <div class="hud-block instructions">
+      <p class="hud-label mono">controles</p>
+      <ul>
+        <li>WASD o flechas para moverte</li>
+        <li>Choca con los muebles — no los atraviesas</li>
+      </ul>
+    </div>
+    <div class="hud-block">
+      <p class="hud-label mono">próximo paso</p>
+      <p class="hud-note">Disfrazarte de objeto, y luego un cazador que te busque.</p>
+    </div>
+  </aside>
+</main>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
