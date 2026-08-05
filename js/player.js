@@ -5,11 +5,11 @@
 export const PLAYER_RADIUS = 16;
 export const MOVE_SPEED = 220; // px/s
 
-export function createPlayer(x, y) {
-  return { x, y, angle: 0, radius: PLAYER_RADIUS, color: "#E4283C" };
+export function createPlayer(x, y, color = "#E4283C") {
+  return { x, y, angle: 0, radius: PLAYER_RADIUS, color };
 }
 
-export function drawPlayer(ctx, p) {
+export function drawPlayer(ctx, p, headColor = "#F3EFEA") {
   const { x, y, angle, radius, color } = p;
 
   // soft ground shadow
@@ -30,7 +30,7 @@ export function drawPlayer(ctx, p) {
   // head, offset toward facing direction
   const hx = x + Math.cos(angle) * radius * 0.55;
   const hy = y + Math.sin(angle) * radius * 0.55;
-  ctx.fillStyle = "#F3EFEA";
+  ctx.fillStyle = headColor;
   ctx.beginPath();
   ctx.arc(hx, hy, radius * 0.4, 0, Math.PI * 2);
   ctx.fill();
