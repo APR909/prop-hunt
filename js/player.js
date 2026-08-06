@@ -9,14 +9,24 @@ export function createPlayer(x, y, color = "#E4283C") {
   return { x, y, angle: 0, radius: PLAYER_RADIUS, color };
 }
 
-export function drawPlayer(ctx, p, headColor = "#F3EFEA") {
-  const { x, y, angle, radius, color } = p;
+export function drawPlayer(ctx, p, headColor = "#F3EFEA", bob = 0) {
+  const { x, angle, radius, color } = p;
+  const baseY = p.y;
+  const hop = Math.abs(bob) * radius * 0.22;
+  const squash = 1 - Math.abs(bob) * 0.12;
+  const y = baseY - hop;
 
-  // soft ground shadow
+  // ground shadow — stays at floor level and widens slightly at the peak of the hop,
+  // which is what sells the sense of height.
   ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath();
-  ctx.ellipse(x, y + 3, radius * 0.9, radius * 0.6, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, baseY + 3, radius * (0.9 + Math.abs(bob) * 0.12), radius * 0.6, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, squash);
+  ctx.translate(-x, -y);
 
   // body
   ctx.fillStyle = color;
@@ -34,4 +44,6 @@ export function drawPlayer(ctx, p, headColor = "#F3EFEA") {
   ctx.beginPath();
   ctx.arc(hx, hy, radius * 0.4, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.restore();
 }

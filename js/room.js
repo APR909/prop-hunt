@@ -11,6 +11,15 @@ export const ROOM_TOP = WALL;
 export const ROOM_RIGHT = CANVAS_W - WALL;
 export const ROOM_BOTTOM = CANVAS_H - WALL;
 
+// interior walls: partition (with a doorway gap) splitting off a side room,
+// plus two short stub walls that carve out corner nooks.
+export const INTERIOR_WALLS = [
+  { x: 734, y: 26, w: 12, h: 254 },   // partition, above the doorway
+  { x: 734, y: 420, w: 12, h: 254 },  // partition, below the doorway
+  { x: 26, y: 500, w: 174, h: 12 },   // bottom-left nook stub
+  { x: 900, y: 26, w: 12, h: 154 },   // top-right nook stub (in the side room)
+];
+
 export function drawRoom(ctx) {
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
@@ -45,6 +54,15 @@ export function drawRoom(ctx) {
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.strokeRect(WALL / 2, WALL / 2, CANVAS_W - WALL, CANVAS_H - WALL);
+
+  // interior walls — same material as the outer band, with a thin red edge
+  for (const w of INTERIOR_WALLS) {
+    ctx.fillStyle = "#0a0808";
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+    ctx.strokeStyle = "rgba(228,40,60,0.3)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(w.x, w.y, w.w, w.h);
+  }
 }
 
 export function clampToRoom(x, y, r) {

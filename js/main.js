@@ -23,7 +23,7 @@ const ROOM_CENTER_Y = (ROOM_TOP + ROOM_BOTTOM) / 2;
 const baseProps = [
   createProp("chair", 220, 150, 0.4),
   createProp("chair", 900, 560, -1.1),
-  createProp("lamp", 140, 500),
+  createProp("lamp", 140, 460),
   createProp("lamp", 950, 160),
   createProp("plant", 180, 620),
   createProp("plant", 980, 400),
@@ -38,11 +38,20 @@ let props = [...baseProps];
 
 const hider = createPlayer(ROOM_CENTER_X, ROOM_CENTER_Y, "#E4283C");
 hider.disguise = null; // null = normal form, or a PROP_TYPES key
+hider.walkPhase = 0;
+hider.bobAmount = 0;
 
 const hunter = createPlayer(ROOM_LEFT + 60, ROOM_TOP + 60, "#F3EFEA");
+hunter.walkPhase = 0;
+hunter.bobAmount = 0;
 
 let mode = "hider"; // "hider" | "hunter"
 let feedback = null; // { text, x, y, until, color }
+let transformFX = null; // { x, y, start, duration } — brief "pop" when disguising/undisguising
+
+function triggerTransformFX(x, y) {
+  transformFX = { x, y, start: performance.now(), duration: 260 };
+}
 
 function nearestFor(entity, range) {
   let best = null;
@@ -102,9 +111,13 @@ window.addEventListener("keydown", (e) => {
   if (mode === "hider" && key === "e") {
     if (hider.disguise) {
       hider.disguise = null;
+      triggerTransformFX(hider.x, hider.y);
     } else {
       const target = nearestFor(hider, DISGUISE_RANGE);
-      if (target) hider.disguise = target.type;
+      if (target) {
+        hider.disguise = target.type;
+        triggerTransformFX(hider.x, hider.y);
+      }
     }
   }
 
@@ -127,11 +140,14 @@ function loop(now) {
 
   const active = mode === "hider" ? hider : hunter;
   const { dx, dy } = keyboard.getMoveVector();
-  if (dx !== 0 || dy !== 0) {
+  const isMoving = dx !== 0 || dy !== 0;
+  if (isMoving) {
     active.x += dx * MOVE_SPEED * dt;
     active.y += dy * MOVE_SPEED * dt;
     active.angle = Math.atan2(dy, dx);
+    active.walkPhase += dt * 12;
   }
+  active.bobAmount += ((isMoving ? 1 : 0) - active.bobAmount) * Math.min(1, dt * 10);
   resolveCollisions(active, props);
 
   drawRoom(ctx);
@@ -145,13 +161,18 @@ function loop(now) {
     if (near) drawHighlight(near, "rgba(243,239,234,0.55)");
   }
 
+  const bob = Math.sin(active.walkPhase) * active.bobAmount;
+
   const hiderDraw = hider.disguise
     ? () => PROP_TYPES[hider.disguise].draw(ctx, hider.x, hider.y, hider.angle)
-    : () => drawPlayer(ctx, hider);
+    : () => drawPlayer(ctx, hider, "#F3EFEA", mode === "hider" ? bob : 0);
 
   const drawables = props.map((p) => ({ y: p.y, draw: () => drawProp(ctx, p) }));
-  if (mode === "hider") drawables.push({ y: hider.y, draw: hiderDraw });
-  else drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C") });
+  if (mode === "hider") {
+    drawables.push({ y: hider.y, draw: () => withTransformPop(hider.x, hider.y, hiderDraw) });
+  } else {
+    drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", bob) });
+  }
   drawables.sort((a, b) => a.y - b.y);
   drawables.forEach((d) => d.draw());
 
@@ -169,6 +190,34 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
+function withTransformPop(x, y, drawFn) {
+  if (!transformFX || performance.now() - transformFX.start >= transformFX.duration) {
+    drawFn();
+    return;
+  }
+
+  const t = (performance.now() - transformFX.start) / transformFX.duration;
+  let scale;
+  if (t < 0.35) scale = 1 - 0.85 * (t / 0.35);
+  else if (t < 0.7) scale = 0.15 + 1.1 * ((t - 0.35) / 0.35);
+  else scale = 1.25 - 0.25 * ((t - 0.7) / 0.3);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.translate(-x, -y);
+  drawFn();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,255,255,${(1 - t) * 0.6})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, 10 + t * 38, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
 
 function drawHighlight(prop, color) {
   ctx.save();
