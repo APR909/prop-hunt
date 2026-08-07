@@ -17,28 +17,41 @@
 <main class="stage">
   <div class="scene-wrap">
     <canvas id="scene" aria-label="Sala vista desde arriba"></canvas>
+    <div id="roundEndOverlay" class="round-overlay hidden">
+      <div class="round-card">
+        <p class="eyebrow mono">// ronda terminada</p>
+        <h1 id="roundResultTitle">¡Cazador gana!</h1>
+        <p id="roundResultDesc" class="hud-note">El cazador encontró al escondido.</p>
+        <button id="btnNewRound" class="btn-reset">Jugar otra ronda</button>
+      </div>
+    </div>
   </div>
 
   <aside class="hud">
+    <div class="hud-block">
+      <p class="hud-label mono"><span id="phaseLabel">escondiéndote</span></p>
+      <p id="phaseTimer" class="hud-value mono">00:15</p>
+      <div class="phase-bar"><div id="phaseBarFill" class="phase-bar-fill"></div></div>
+    </div>
+
     <div class="hud-block">
       <p class="hud-label mono">estado</p>
       <p id="disguiseStatus" class="hud-value">sin disfraz</p>
       <p id="disguiseHint" class="hud-note">acércate a un objeto para disfrazarte</p>
     </div>
-    <button id="modeToggle" class="btn-reset">Pasar a cazador (Tab)</button>
+
     <div class="hud-block instructions">
       <p class="hud-label mono">controles</p>
       <ul>
         <li>WASD o flechas para moverte</li>
         <li>Choca con los muebles — no los atraviesas</li>
-        <li>E para disfrazarte / volver a tu forma</li>
-        <li>Espacio para inspeccionar (como cazador)</li>
-        <li>Tab para probar el otro papel</li>
+        <li>E para disfrazarte (solo mientras te escondes)</li>
+        <li>Espacio para inspeccionar (solo durante la caza)</li>
       </ul>
     </div>
     <div class="hud-block">
       <p class="hud-label mono">nota</p>
-      <p class="hud-note">Esto es una prueba local: Tab pasa de un papel a otro en el mismo navegador. El multijugador real vendrá después.</p>
+      <p class="hud-note">Prueba local: tú juegas primero de escondido y, cuando se acaba el tiempo, pasas a controlar al cazador. El multijugador real vendrá después.</p>
     </div>
   </aside>
 </main>
