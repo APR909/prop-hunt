@@ -3,6 +3,7 @@ import { drawProp, scatterProps, PROP_TYPES } from "./props.js";
 import { createPlayer, drawPlayer, MOVE_SPEED } from "./player.js";
 import { createKeyboard } from "./input.js";
 import { resolveCollisions } from "./physics.js";
+import { applyFogOfWar } from "./fog.js";
 
 const canvas = document.getElementById("scene");
 canvas.width = CANVAS_W;
@@ -228,6 +229,10 @@ function loop(now) {
   }
   drawables.sort((a, b) => a.y - b.y);
   drawables.forEach((d) => d.draw());
+
+  if (roundPhase === "hunting") {
+    applyFogOfWar(ctx, hunter, CANVAS_W, CANVAS_H);
+  }
 
   if (feedback && performance.now() < feedback.until) {
     ctx.save();
