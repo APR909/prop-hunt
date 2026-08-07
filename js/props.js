@@ -181,6 +181,40 @@ export function createProp(type, x, y, angle = 0) {
   return { type, x, y, angle, radius: PROP_TYPES[type].radius };
 }
 
+/** Scatters 2-4 random props per room, keeping them clear of walls and
+ *  of each other (simple rejection sampling — a handful of retries each). */
+export function scatterProps(rooms) {
+  const types = Object.keys(PROP_TYPES);
+  const props = [];
+  const PAD = 34;
+
+  for (const room of rooms) {
+    const count = 2 + Math.floor(Math.random() * 3); // 2..4
+    let placed = 0;
+    let attempts = 0;
+
+    while (placed < count && attempts < 50) {
+      attempts++;
+      const type = types[Math.floor(Math.random() * types.length)];
+      const r = PROP_TYPES[type].radius;
+      const spanX = room.w - 2 * (PAD + r);
+      const spanY = room.h - 2 * (PAD + r);
+      if (spanX <= 0 || spanY <= 0) continue;
+
+      const x = room.x + PAD + r + Math.random() * spanX;
+      const y = room.y + PAD + r + Math.random() * spanY;
+
+      const overlaps = props.some((p) => Math.hypot(p.x - x, p.y - y) < p.radius + r + 16);
+      if (overlaps) continue;
+
+      props.push(createProp(type, x, y, (Math.random() - 0.5) * 1.4));
+      placed++;
+    }
+  }
+
+  return props;
+}
+
 export function drawProp(ctx, prop) {
   PROP_TYPES[prop.type].draw(ctx, prop.x, prop.y, prop.angle);
 }

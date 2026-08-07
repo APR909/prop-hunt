@@ -1,5 +1,5 @@
-import { CANVAS_W, CANVAS_H, drawRoom, ROOM_LEFT, ROOM_RIGHT, ROOM_TOP, ROOM_BOTTOM } from "./room.js";
-import { createProp, drawProp, PROP_TYPES } from "./props.js";
+import { CANVAS_W, CANVAS_H, drawRoom, generateFloorPlan } from "./room.js";
+import { drawProp, scatterProps, PROP_TYPES } from "./props.js";
 import { createPlayer, drawPlayer, MOVE_SPEED } from "./player.js";
 import { createKeyboard } from "./input.js";
 import { resolveCollisions } from "./physics.js";
@@ -17,31 +17,29 @@ const DISGUISE_RANGE = 46; // extra reach beyond the two radii touching
 const CHECK_RANGE = 50;    // how close the hunter must be to inspect an object
 
 const keyboard = createKeyboard();
-const ROOM_CENTER_X = (ROOM_LEFT + ROOM_RIGHT) / 2;
-const ROOM_CENTER_Y = (ROOM_TOP + ROOM_BOTTOM) / 2;
 
-const baseProps = [
-  createProp("chair", 220, 150, 0.4),
-  createProp("chair", 900, 560, -1.1),
-  createProp("lamp", 140, 460),
-  createProp("lamp", 950, 160),
-  createProp("plant", 180, 620),
-  createProp("plant", 980, 400),
-  createProp("crate", 420, 130, 0.2),
-  createProp("crate", 460, 200, -0.3),
-  createProp("crate", 700, 580, 0.6),
-  createProp("table", 620, 340, 0.1),
-  createProp("barrel", 320, 480),
-  createProp("barrel", 800, 230),
-];
-let props = [...baseProps];
+function newFloorPlan() {
+  const plan = generateFloorPlan();
+  const scattered = scatterProps(plan.rooms);
+  return { ...plan, props: scattered };
+}
 
-const hider = createPlayer(ROOM_CENTER_X, ROOM_CENTER_Y, "#E4283C");
+let floorPlan = newFloorPlan();
+let props = floorPlan.props;
+
+function roomCenter(room) {
+  return { x: room.x + room.w / 2, y: room.y + room.h / 2 };
+}
+
+const hiderStart = roomCenter(floorPlan.rooms[0]);
+const hunterStart = roomCenter(floorPlan.rooms[floorPlan.rooms.length - 1]);
+
+const hider = createPlayer(hiderStart.x, hiderStart.y, "#E4283C");
 hider.disguise = null; // null = normal form, or a PROP_TYPES key
 hider.walkPhase = 0;
 hider.bobAmount = 0;
 
-const hunter = createPlayer(ROOM_LEFT + 60, ROOM_TOP + 60, "#F3EFEA");
+const hunter = createPlayer(hunterStart.x, hunterStart.y, "#F3EFEA");
 hunter.walkPhase = 0;
 hunter.bobAmount = 0;
 
@@ -52,6 +50,7 @@ let transformFX = null; // { x, y, start, duration } — brief "pop" when disgui
 function triggerTransformFX(x, y) {
   transformFX = { x, y, start: performance.now(), duration: 260 };
 }
+
 
 function nearestFor(entity, range) {
   let best = null;
@@ -77,17 +76,20 @@ function switchToHunter() {
       isHiddenPlayer: true,
     });
   }
-  hunter.x = ROOM_LEFT + 60;
-  hunter.y = ROOM_TOP + 60;
+  const start = roomCenter(floorPlan.rooms[floorPlan.rooms.length - 1]);
+  hunter.x = start.x;
+  hunter.y = start.y;
   hunter.angle = 0;
   mode = "hunter";
   feedback = null;
 }
 
 function switchToHider() {
-  props = [...baseProps];
-  hider.x = ROOM_CENTER_X;
-  hider.y = ROOM_CENTER_Y;
+  floorPlan = newFloorPlan(); // fresh layout + props each round
+  props = floorPlan.props;
+  const start = roomCenter(floorPlan.rooms[0]);
+  hider.x = start.x;
+  hider.y = start.y;
   hider.disguise = null;
   mode = "hider";
   feedback = null;
@@ -148,9 +150,9 @@ function loop(now) {
     active.walkPhase += dt * 12;
   }
   active.bobAmount += ((isMoving ? 1 : 0) - active.bobAmount) * Math.min(1, dt * 10);
-  resolveCollisions(active, props);
+  resolveCollisions(active, props, floorPlan.walls);
 
-  drawRoom(ctx);
+  drawRoom(ctx, floorPlan.walls);
 
   let near = null;
   if (mode === "hider" && !hider.disguise) {

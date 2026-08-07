@@ -2,10 +2,10 @@
 // PHYSICS — player vs walls (clamp) and player vs static props
 // (push the player out; props don't move).
 // ============================================================
-import { clampToRoom, INTERIOR_WALLS } from "./room.js";
+import { clampToRoom } from "./room.js";
 
-function resolveWalls(entity) {
-  for (const w of INTERIOR_WALLS) {
+function resolveWalls(entity, walls) {
+  for (const w of walls) {
     const closestX = Math.max(w.x, Math.min(entity.x, w.x + w.w));
     const closestY = Math.max(w.y, Math.min(entity.y, w.y + w.h));
     const dx = entity.x - closestX;
@@ -36,12 +36,12 @@ function resolveWalls(entity) {
   }
 }
 
-export function resolveCollisions(player, props) {
+export function resolveCollisions(player, props, walls) {
   const clamped = clampToRoom(player.x, player.y, player.radius);
   player.x = clamped.x;
   player.y = clamped.y;
 
-  resolveWalls(player);
+  resolveWalls(player, walls);
 
   for (const prop of props) {
     const dx = player.x - prop.x;
@@ -57,7 +57,7 @@ export function resolveCollisions(player, props) {
     player.y += ny * overlap;
   }
 
-  resolveWalls(player);
+  resolveWalls(player, walls);
   const reclamped = clampToRoom(player.x, player.y, player.radius);
   player.x = reclamped.x;
   player.y = reclamped.y;
