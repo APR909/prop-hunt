@@ -69,12 +69,12 @@ export function generateFloorPlan() {
   const roomAt = (i, j) => rooms[j * GRID_COLS + i];
 
   const walls = [];
+  const doors = []; // { a, b, x, y } — room indices + the doorway gap's center point
 
-  // outer bounding walls aren't stored as rects (handled by clampToRoom),
-  // only interior partitions need explicit wall geometry.
   for (let j = 0; j < GRID_ROWS; j++) {
     for (let i = 0; i < GRID_COLS; i++) {
       const room = roomAt(i, j);
+      const roomIdx = j * GRID_COLS + i;
 
       if (i < GRID_COLS - 1) {
         // shared wall with the room to the right
@@ -82,6 +82,7 @@ export function generateFloorPlan() {
         const gap = randomGap(room.y, room.h, DOOR_SIZE, DOOR_MARGIN);
         walls.push({ x: wx, y: room.y, w: INNER_WALL, h: gap.start - room.y });
         walls.push({ x: wx, y: gap.end, w: INNER_WALL, h: room.y + room.h - gap.end });
+        doors.push({ a: roomIdx, b: roomIdx + 1, x: wx + INNER_WALL / 2, y: (gap.start + gap.end) / 2 });
       }
       if (j < GRID_ROWS - 1) {
         // shared wall with the room below
@@ -89,11 +90,12 @@ export function generateFloorPlan() {
         const gap = randomGap(room.x, room.w, DOOR_SIZE, DOOR_MARGIN);
         walls.push({ x: room.x, y: wy, w: gap.start - room.x, h: INNER_WALL });
         walls.push({ x: gap.end, y: wy, w: room.x + room.w - gap.end, h: INNER_WALL });
+        doors.push({ a: roomIdx, b: roomIdx + GRID_COLS, x: (gap.start + gap.end) / 2, y: wy + INNER_WALL / 2 });
       }
     }
   }
 
-  return { rooms, walls };
+  return { rooms, walls, doors };
 }
 
 export function drawRoom(ctx, walls) {

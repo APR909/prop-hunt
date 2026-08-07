@@ -145,6 +145,11 @@ canvas {
 }
 .round-overlay.hidden { display: none; }
 
+#modeSelectOverlay {
+  position: fixed;
+  z-index: 50;
+}
+
 .round-card {
   background: var(--card);
   border-radius: 18px;

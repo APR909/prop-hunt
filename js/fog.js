@@ -25,7 +25,7 @@ function getFogLayer(w, h) {
 
 const NEAR_RADIUS = 85;                // fully-visible radius around the hunter, every direction
 const CONE_RADIUS = 300;               // how far the flashlight reaches
-const CONE_HALF_ANGLE = Math.PI / 6.2; // ~29° each side of facing direction (~58° total)
+export const CONE_HALF_ANGLE = Math.PI / 6.2; // ~29° each side of facing direction (~58° total)
 
 export function applyFogOfWar(mainCtx, hunter, w, h) {
   const ctx = getFogLayer(w, h);

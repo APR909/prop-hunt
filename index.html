@@ -15,6 +15,16 @@
 </header>
 
 <main class="stage">
+  <div id="modeSelectOverlay" class="round-overlay">
+    <div class="round-card">
+      <p class="eyebrow mono">// elige modo</p>
+      <h1>¿Cómo juegas?</h1>
+      <p class="hud-note">En los dos, tú controlas al cazador. La diferencia es quién se esconde.</p>
+      <button id="btnModeLocal" class="btn-reset" style="margin-bottom:10px;">Prueba local (tú haces de escondido primero)</button>
+      <button id="btnModeAI" class="btn-reset">Un jugador (la IA se esconde de ti)</button>
+    </div>
+  </div>
+
   <div class="scene-wrap">
     <canvas id="scene" aria-label="Sala vista desde arriba"></canvas>
     <div id="roundEndOverlay" class="round-overlay hidden">
