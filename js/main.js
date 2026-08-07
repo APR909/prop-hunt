@@ -282,61 +282,77 @@ function loop(now) {
     }
   }
 
-  drawRoom(ctx, floorPlan.walls);
-
+  const aiIsHidingUnseen = gameMode === "ai" && roundPhase === "hiding";
   let near = null;
-  if (gameMode === "local") {
-    if (roundPhase === "hiding" && !hider.disguise) {
-      near = nearestFor(hider, DISGUISE_RANGE);
-      if (near) drawHighlight(near, "rgba(228,40,60,0.85)");
-    } else if (roundPhase === "hunting") {
-      near = nearestFor(hunter, CHECK_RANGE);
+
+  if (aiIsHidingUnseen) {
+    ctx.fillStyle = "#0a0808";
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#A9A29D";
+    ctx.font = "600 22px 'Work Sans', sans-serif";
+    ctx.fillText("La IA se está escondiendo…", CANVAS_W / 2, CANVAS_H / 2 - 14);
+    ctx.font = "16px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "#7a746f";
+    ctx.fillText("no puedes ver el mapa hasta que empiece la caza", CANVAS_W / 2, CANVAS_H / 2 + 18);
+    ctx.restore();
+  } else {
+    drawRoom(ctx, floorPlan.walls);
+
+    if (gameMode === "local") {
+      if (roundPhase === "hiding" && !hider.disguise) {
+        near = nearestFor(hider, DISGUISE_RANGE);
+        if (near) drawHighlight(near, "rgba(228,40,60,0.85)");
+      } else if (roundPhase === "hunting") {
+        near = nearestFor(hunter, CHECK_RANGE);
+        if (near) drawHighlight(near, "rgba(243,239,234,0.55)");
+      }
+    } else if (gameMode === "ai" && roundPhase === "hunting") {
+      near = nearestForHunterAI();
       if (near) drawHighlight(near, "rgba(243,239,234,0.55)");
     }
-  } else if (gameMode === "ai" && roundPhase === "hunting") {
-    near = nearestForHunterAI();
-    if (near) drawHighlight(near, "rgba(243,239,234,0.55)");
-  }
 
-  const bob = Math.sin(hider.walkPhase) * hider.bobAmount;
-  const hunterBob = Math.sin(hunter.walkPhase) * hunter.bobAmount;
-  const aiBob = Math.sin(aiHider.walkPhase) * aiHider.bobAmount;
+    const bob = Math.sin(hider.walkPhase) * hider.bobAmount;
+    const hunterBob = Math.sin(hunter.walkPhase) * hunter.bobAmount;
+    const aiBob = Math.sin(aiHider.walkPhase) * aiHider.bobAmount;
 
-  const drawables = props.map((p) => ({ y: p.y, draw: () => drawProp(ctx, p) }));
+    const drawables = props.map((p) => ({ y: p.y, draw: () => drawProp(ctx, p) }));
 
-  if (gameMode === "local") {
-    const hiderDraw = hider.disguise
-      ? () => PROP_TYPES[hider.disguise].draw(ctx, hider.x, hider.y, hider.angle)
-      : () => drawPlayer(ctx, hider, "#F3EFEA", mode === "hider" ? bob : 0);
-    if (roundPhase === "hiding") {
-      drawables.push({ y: hider.y, draw: () => withTransformPop(hider.x, hider.y, hiderDraw) });
-    } else if (roundPhase === "hunting") {
-      drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+    if (gameMode === "local") {
+      const hiderDraw = hider.disguise
+        ? () => PROP_TYPES[hider.disguise].draw(ctx, hider.x, hider.y, hider.angle)
+        : () => drawPlayer(ctx, hider, "#F3EFEA", mode === "hider" ? bob : 0);
+      if (roundPhase === "hiding") {
+        drawables.push({ y: hider.y, draw: () => withTransformPop(hider.x, hider.y, hiderDraw) });
+      } else if (roundPhase === "hunting") {
+        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+      }
+    } else if (gameMode === "ai") {
+      const aiDraw = aiHider.disguise
+        ? () => PROP_TYPES[aiHider.disguise].draw(ctx, aiHider.x, aiHider.y, aiHider.angle)
+        : () => drawPlayer(ctx, aiHider, "#F3EFEA", aiBob);
+      drawables.push({ y: aiHider.y, draw: aiDraw });
+      if (roundPhase !== "hiding") {
+        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+      }
     }
-  } else if (gameMode === "ai") {
-    const aiDraw = aiHider.disguise
-      ? () => PROP_TYPES[aiHider.disguise].draw(ctx, aiHider.x, aiHider.y, aiHider.angle)
-      : () => drawPlayer(ctx, aiHider, "#F3EFEA", aiBob);
-    drawables.push({ y: aiHider.y, draw: aiDraw });
-    if (roundPhase !== "hiding") {
-      drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+
+    drawables.sort((a, b) => a.y - b.y);
+    drawables.forEach((d) => d.draw());
+
+    if (roundPhase === "hunting") {
+      applyFogOfWar(ctx, hunter, CANVAS_W, CANVAS_H);
     }
-  }
 
-  drawables.sort((a, b) => a.y - b.y);
-  drawables.forEach((d) => d.draw());
-
-  if (roundPhase === "hunting") {
-    applyFogOfWar(ctx, hunter, CANVAS_W, CANVAS_H);
-  }
-
-  if (feedback && performance.now() < feedback.until) {
-    ctx.save();
-    ctx.font = "600 20px 'Work Sans', sans-serif";
-    ctx.fillStyle = feedback.color;
-    ctx.textAlign = "center";
-    ctx.fillText(feedback.text, feedback.x, feedback.y);
-    ctx.restore();
+    if (feedback && performance.now() < feedback.until) {
+      ctx.save();
+      ctx.font = "600 20px 'Work Sans', sans-serif";
+      ctx.fillStyle = feedback.color;
+      ctx.textAlign = "center";
+      ctx.fillText(feedback.text, feedback.x, feedback.y);
+      ctx.restore();
+    }
   }
 
   if (gameMode) updateHud(near);

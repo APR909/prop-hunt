@@ -81,6 +81,7 @@ export function startHiding(ai, rooms, doors, staticProps) {
   ai.disguise = null;
   ai.path = [...roomPath, { x: spot.prop.x, y: spot.prop.y }];
   ai.pendingDisguise = spot.prop.type;
+  ai.finalRadius = spot.prop.radius;
 }
 
 function isDetectedBy(ai, hunter) {
@@ -105,6 +106,7 @@ function startFleeing(ai, rooms, doors, staticProps, hunter) {
   const roomPath = findRoomPath(rooms, doors, currentRoom, spot.roomIdx);
   ai.path = [...roomPath, { x: spot.prop.x, y: spot.prop.y }];
   ai.pendingDisguise = spot.prop.type;
+  ai.finalRadius = spot.prop.radius;
 }
 
 /** Advance the AI by one frame. Returns nothing — mutates `ai` in place. */
@@ -118,7 +120,9 @@ export function updateAI(ai, dt, { rooms, doors, staticProps, hunter, roundPhase
     const dx = target.x - ai.x;
     const dy = target.y - ai.y;
     const dist = Math.hypot(dx, dy);
-    if (dist < ARRIVE_TOL) {
+    const isFinalLeg = ai.path.length === 1;
+    const tol = isFinalLeg ? ai.finalRadius + ai.radius + 8 : ARRIVE_TOL;
+    if (dist < tol) {
       ai.path.shift();
     } else {
       ai.x += (dx / dist) * moveSpeed * dt;
