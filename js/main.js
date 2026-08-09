@@ -1,6 +1,8 @@
 import { CANVAS_W, CANVAS_H, drawRoom, generateFloorPlan } from "./room.js";
 import { drawProp, scatterProps, PROP_TYPES } from "./props.js";
 import { createPlayer, drawPlayer, MOVE_SPEED } from "./player.js";
+
+const HIDER_SPEED_MULTIPLIER = 1.15; // the hider is always a bit quicker than the hunter
 import { createKeyboard } from "./input.js";
 import { resolveCollisions } from "./physics.js";
 import { applyFogOfWar } from "./fog.js";
@@ -255,9 +257,10 @@ function loop(now) {
       const active = mode === "hider" ? hider : hunter;
       const { dx, dy } = keyboard.getMoveVector();
       const isMoving = dx !== 0 || dy !== 0;
+      const speed = mode === "hider" ? MOVE_SPEED * HIDER_SPEED_MULTIPLIER : MOVE_SPEED;
       if (isMoving) {
-        active.x += dx * MOVE_SPEED * dt;
-        active.y += dy * MOVE_SPEED * dt;
+        active.x += dx * speed * dt;
+        active.y += dy * speed * dt;
         active.angle = Math.atan2(dy, dx);
         active.walkPhase += dt * 12;
       }
@@ -282,7 +285,7 @@ function loop(now) {
         staticProps: floorPlan.props,
         hunter,
         roundPhase,
-        moveSpeed: MOVE_SPEED,
+        moveSpeed: MOVE_SPEED * HIDER_SPEED_MULTIPLIER,
       });
       resolveCollisions(aiHider, props, floorPlan.walls);
     }
