@@ -304,7 +304,7 @@ function loop(now) {
     ctx.fillText("no puedes ver el mapa hasta que empiece la caza", CANVAS_W / 2, CANVAS_H / 2 + 18);
     ctx.restore();
   } else {
-    drawRoom(ctx, floorPlan.walls);
+    drawRoom(ctx, floorPlan.walls, floorPlan.tubes);
 
     if (gameMode === "local") {
       if (roundPhase === "hiding" && !hider.disguise) {
