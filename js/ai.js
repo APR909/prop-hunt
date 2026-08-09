@@ -45,8 +45,9 @@ function findRoomPath(rooms, doors, fromIdx, toIdx) {
   return [];
 }
 
-function pickHidingSpot(rooms, staticProps, avoidRoomIdx) {
-  const roomIdxs = rooms.map((_, i) => i).filter((i) => i !== avoidRoomIdx);
+function pickHidingSpot(rooms, staticProps, avoidRoomIdxs) {
+  const avoid = Array.isArray(avoidRoomIdxs) ? avoidRoomIdxs : [avoidRoomIdxs];
+  const roomIdxs = rooms.map((_, i) => i).filter((i) => !avoid.includes(i));
   const shuffled = roomIdxs.sort(() => Math.random() - 0.5);
 
   for (const roomIdx of shuffled) {
@@ -58,6 +59,15 @@ function pickHidingSpot(rooms, staticProps, avoidRoomIdx) {
       const prop = inRoom[Math.floor(Math.random() * inRoom.length)];
       return { roomIdx, prop };
     }
+  }
+  // fallback — every room was excluded or empty; just grab any prop anywhere
+  // rather than leaving the AI with nowhere to go.
+  if (staticProps.length > 0) {
+    const prop = staticProps[Math.floor(Math.random() * staticProps.length)];
+    const roomIdx = rooms.findIndex(
+      (r) => prop.x >= r.x && prop.x <= r.x + r.w && prop.y >= r.y && prop.y <= r.y + r.h
+    );
+    return { roomIdx: roomIdx >= 0 ? roomIdx : 0, prop };
   }
   return null;
 }
@@ -75,13 +85,14 @@ export function createAIHider(entity) {
 /** Call once at the start of the hiding phase. */
 export function startHiding(ai, rooms, doors, staticProps) {
   const currentRoom = roomIndexAt(rooms, ai.x, ai.y);
-  const spot = pickHidingSpot(rooms, staticProps, -1) || { roomIdx: currentRoom, prop: staticProps[0] };
+  const spot = pickHidingSpot(rooms, staticProps, []) || { roomIdx: currentRoom, prop: staticProps[0] };
   const roomPath = findRoomPath(rooms, doors, currentRoom, spot.roomIdx);
   ai.state = "traveling";
   ai.disguise = null;
   ai.path = [...roomPath, { x: spot.prop.x, y: spot.prop.y }];
   ai.pendingDisguise = spot.prop.type;
   ai.finalRadius = spot.prop.radius;
+  ai.fleeCooldownUntil = 0;
 }
 
 function isDetectedBy(ai, hunter) {
@@ -98,7 +109,7 @@ function isDetectedBy(ai, hunter) {
 function startFleeing(ai, rooms, doors, staticProps, hunter) {
   const currentRoom = roomIndexAt(rooms, ai.x, ai.y);
   const hunterRoom = roomIndexAt(rooms, hunter.x, hunter.y);
-  const spot = pickHidingSpot(rooms, staticProps, hunterRoom);
+  const spot = pickHidingSpot(rooms, staticProps, [currentRoom, hunterRoom]);
   if (!spot) return;
 
   ai.state = "fleeing";
@@ -111,7 +122,8 @@ function startFleeing(ai, rooms, doors, staticProps, hunter) {
 
 /** Advance the AI by one frame. Returns nothing — mutates `ai` in place. */
 export function updateAI(ai, dt, { rooms, doors, staticProps, hunter, roundPhase, moveSpeed }) {
-  if (roundPhase === "hunting" && ai.state !== "fleeing" && isDetectedBy(ai, hunter)) {
+  const inGracePeriod = performance.now() < (ai.fleeCooldownUntil || 0);
+  if (roundPhase === "hunting" && ai.state !== "fleeing" && !inGracePeriod && isDetectedBy(ai, hunter)) {
     startFleeing(ai, rooms, doors, staticProps, hunter);
   }
 
@@ -137,6 +149,7 @@ export function updateAI(ai, dt, { rooms, doors, staticProps, hunter, roundPhase
       ai.disguise = ai.pendingDisguise;
       ai.pendingDisguise = null;
       ai.state = "disguised";
+      ai.fleeCooldownUntil = performance.now() + 1800; // brief grace period before it can be spotted again
     }
   }
 }

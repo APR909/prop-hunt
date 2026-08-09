@@ -26,8 +26,10 @@ const btnModeAI = document.getElementById("btnModeAI");
 
 const DISGUISE_RANGE = 46;
 const CHECK_RANGE = 50;
-const HIDE_DURATION = 30;
-const HUNT_DURATION = 90;
+const HIDE_DURATION_LOCAL = 30;
+const HUNT_DURATION_LOCAL = 90;
+const HIDE_DURATION_AI = 10;
+const HUNT_DURATION_AI = 45;
 
 const keyboard = createKeyboard();
 
@@ -58,8 +60,10 @@ const aiHider = createAIHider(createPlayer(0, 0, "#E4283C"));
 let gameMode = null; // "local" | "ai"
 let mode = "hider";  // which entity local keyboard input drives (local mode only)
 let roundPhase = "hiding";
-let hideTimeLeft = HIDE_DURATION;
-let huntTimeLeft = HUNT_DURATION;
+let hideTimeLeft = HIDE_DURATION_LOCAL;
+let huntTimeLeft = HUNT_DURATION_LOCAL;
+let hideDuration = HIDE_DURATION_LOCAL;
+let huntDuration = HUNT_DURATION_LOCAL;
 let feedback = null;
 let transformFX = null;
 
@@ -140,7 +144,9 @@ function startRound() {
   aiHider.path = [];
 
   roundPhase = "hiding";
-  hideTimeLeft = HIDE_DURATION;
+  hideDuration = gameMode === "ai" ? HIDE_DURATION_AI : HIDE_DURATION_LOCAL;
+  huntDuration = gameMode === "ai" ? HUNT_DURATION_AI : HUNT_DURATION_LOCAL;
+  hideTimeLeft = hideDuration;
   mode = "hider";
   feedback = null;
   roundEndOverlayEl.classList.add("hidden");
@@ -167,7 +173,7 @@ function startHuntPhase() {
   hunter.angle = 0;
 
   roundPhase = "hunting";
-  huntTimeLeft = HUNT_DURATION;
+  huntTimeLeft = huntDuration;
   mode = "hunter";
   feedback = null;
 }
@@ -403,7 +409,7 @@ function updateHud(near) {
   if (roundPhase === "hiding") {
     phaseLabelEl.textContent = gameMode === "ai" ? "la ia se esconde" : "escondiéndote";
     phaseTimerEl.textContent = formatTime(hideTimeLeft);
-    phaseBarFillEl.style.width = `${(hideTimeLeft / HIDE_DURATION) * 100}%`;
+    phaseBarFillEl.style.width = `${(hideTimeLeft / hideDuration) * 100}%`;
     phaseBarFillEl.className = "phase-bar-fill" + (hideTimeLeft < 5 ? " urgent" : "");
 
     if (gameMode === "ai") {
@@ -424,7 +430,7 @@ function updateHud(near) {
   } else if (roundPhase === "hunting") {
     phaseLabelEl.textContent = "cazando";
     phaseTimerEl.textContent = formatTime(huntTimeLeft);
-    phaseBarFillEl.style.width = `${(huntTimeLeft / HUNT_DURATION) * 100}%`;
+    phaseBarFillEl.style.width = `${(huntTimeLeft / huntDuration) * 100}%`;
     phaseBarFillEl.className = "phase-bar-fill hunting" + (huntTimeLeft < 8 ? " urgent" : "");
 
     disguiseStatusEl.textContent = "modo cazador";
