@@ -1,14 +1,17 @@
 // ============================================================
 // AI HIDER — for single-player mode. Picks a room + prop to hide
-// as, walks there through the doorway graph (real pathfinding, not
-// a straight line, so it doesn't get stuck on walls), disguises,
-// and — if the hunter gets close AND has their flashlight cone on
-// it — reveals itself and bolts to a new spot elsewhere.
+// as during the hide phase, and walks there through the doorway
+// graph (real pathfinding, not a straight line, so it doesn't get
+// stuck on walls).
+//
+// Once the hunter gets VERY close, the game turns into tag: the AI
+// drops its disguise, and from that moment on just keeps running
+// away from wherever the hunter currently is for the rest of the
+// round — no more re-hiding, no more disguises.
 // ============================================================
 import { PROP_TYPES } from "./props.js";
-import { CONE_HALF_ANGLE } from "./fog.js";
 
-const DETECTION_RANGE = 190; // must be within the cone AND closer than this to be "seen"
+const CLOSE_RANGE = 75; // pure proximity — how close the hunter must get to spook it into a permanent chase
 const ARRIVE_TOL = 10;
 
 function roomIndexAt(rooms, x, y) {
@@ -60,8 +63,6 @@ function pickHidingSpot(rooms, staticProps, avoidRoomIdxs) {
       return { roomIdx, prop };
     }
   }
-  // fallback — every room was excluded or empty; just grab any prop anywhere
-  // rather than leaving the AI with nowhere to go.
   if (staticProps.length > 0) {
     const prop = staticProps[Math.floor(Math.random() * staticProps.length)];
     const roomIdx = rooms.findIndex(
@@ -75,7 +76,7 @@ function pickHidingSpot(rooms, staticProps, avoidRoomIdxs) {
 export function createAIHider(entity) {
   entity.disguise = null;
   entity.pendingDisguise = null;
-  entity.state = "traveling"; // "traveling" | "disguised" | "fleeing"
+  entity.state = "traveling"; // "traveling" | "disguised" | "chased"
   entity.path = [];
   entity.walkPhase = 0;
   entity.bobAmount = 0;
@@ -92,39 +93,30 @@ export function startHiding(ai, rooms, doors, staticProps) {
   ai.path = [...roomPath, { x: spot.prop.x, y: spot.prop.y }];
   ai.pendingDisguise = spot.prop.type;
   ai.finalRadius = spot.prop.radius;
-  ai.fleeCooldownUntil = 0;
 }
 
-function isDetectedBy(ai, hunter) {
-  const dx = ai.x - hunter.x;
-  const dy = ai.y - hunter.y;
-  const dist = Math.hypot(dx, dy);
-  if (dist > DETECTION_RANGE) return false;
-  const angleToAI = Math.atan2(dy, dx);
-  let diff = Math.abs(angleToAI - hunter.angle);
-  if (diff > Math.PI) diff = Math.PI * 2 - diff;
-  return diff < CONE_HALF_ANGLE;
-}
-
-function startFleeing(ai, rooms, doors, staticProps, hunter) {
-  const currentRoom = roomIndexAt(rooms, ai.x, ai.y);
-  const hunterRoom = roomIndexAt(rooms, hunter.x, hunter.y);
-  const spot = pickHidingSpot(rooms, staticProps, [currentRoom, hunterRoom]);
-  if (!spot) return;
-
-  ai.state = "fleeing";
-  ai.disguise = null;
-  const roomPath = findRoomPath(rooms, doors, currentRoom, spot.roomIdx);
-  ai.path = [...roomPath, { x: spot.prop.x, y: spot.prop.y }];
-  ai.pendingDisguise = spot.prop.type;
-  ai.finalRadius = spot.prop.radius;
+function isVeryClose(ai, hunter) {
+  return Math.hypot(ai.x - hunter.x, ai.y - hunter.y) < CLOSE_RANGE;
 }
 
 /** Advance the AI by one frame. Returns nothing — mutates `ai` in place. */
-export function updateAI(ai, dt, { rooms, doors, staticProps, hunter, roundPhase, moveSpeed }) {
-  const inGracePeriod = performance.now() < (ai.fleeCooldownUntil || 0);
-  if (roundPhase === "hunting" && ai.state !== "fleeing" && !inGracePeriod && isDetectedBy(ai, hunter)) {
-    startFleeing(ai, rooms, doors, staticProps, hunter);
+export function updateAI(ai, dt, { hunter, roundPhase, moveSpeed }) {
+  if (roundPhase === "hunting" && ai.state !== "chased" && isVeryClose(ai, hunter)) {
+    ai.state = "chased";
+    ai.disguise = null;
+    ai.path = [];
+  }
+
+  if (ai.state === "chased") {
+    const dx = ai.x - hunter.x;
+    const dy = ai.y - hunter.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    ai.x += (dx / dist) * moveSpeed * dt;
+    ai.y += (dy / dist) * moveSpeed * dt;
+    ai.angle = Math.atan2(dy, dx);
+    ai.walkPhase += dt * 12;
+    ai.bobAmount += (1 - ai.bobAmount) * Math.min(1, dt * 10);
+    return;
   }
 
   if (ai.path.length > 0) {
@@ -145,11 +137,10 @@ export function updateAI(ai, dt, { rooms, doors, staticProps, hunter, roundPhase
     ai.bobAmount += (1 - ai.bobAmount) * Math.min(1, dt * 10);
   } else {
     ai.bobAmount += (0 - ai.bobAmount) * Math.min(1, dt * 10);
-    if (ai.state === "traveling" || ai.state === "fleeing") {
+    if (ai.state === "traveling") {
       ai.disguise = ai.pendingDisguise;
       ai.pendingDisguise = null;
       ai.state = "disguised";
-      ai.fleeCooldownUntil = performance.now() + 1800; // brief grace period before it can be spotted again
     }
   }
 }
