@@ -171,6 +171,44 @@ canvas {
 }
 .round-card .hud-note { margin-bottom: 22px; }
 
+.join-row { display: flex; gap: 8px; }
+.join-row input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.join-row input:focus { outline: none; border-color: var(--red-bright); }
+.join-row .btn-reset { flex-shrink: 0; padding: 12px 20px; }
+
+.room-code-big {
+  font-family: var(--font-mono);
+  font-size: 2.6rem;
+  letter-spacing: 0.15em;
+  color: var(--red-bright);
+  margin: 6px 0 22px;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 18px;
+  padding: 4px;
+}
+.btn-text:hover { color: var(--ink); }
+
 .instructions ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
 .instructions li { font-size: 0.78rem; color: var(--ink-soft); line-height: 1.4; }
 

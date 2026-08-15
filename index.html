@@ -19,9 +19,35 @@
     <div class="round-card">
       <p class="eyebrow mono">// elige modo</p>
       <h1>¿Cómo juegas?</h1>
-      <p class="hud-note">En los dos, tú controlas al cazador. La diferencia es quién se esconde.</p>
+      <p class="hud-note">En los tres, tú controlas al cazador (salvo online, donde eliges). La diferencia es quién se esconde.</p>
       <button id="btnModeLocal" class="btn-reset" style="margin-bottom:10px;">Prueba local (tú haces de escondido primero)</button>
-      <button id="btnModeAI" class="btn-reset">Un jugador (la IA se esconde de ti)</button>
+      <button id="btnModeAI" class="btn-reset" style="margin-bottom:10px;">Un jugador (la IA se esconde de ti)</button>
+      <button id="btnModeOnline" class="btn-reset">Multijugador online</button>
+    </div>
+  </div>
+
+  <div id="onlineLobbyOverlay" class="round-overlay hidden">
+    <div class="round-card">
+      <p class="eyebrow mono">// multijugador</p>
+      <h1>Sala online</h1>
+      <p class="hud-note">Quien crea la sala se esconde primero. Quien se une, caza.</p>
+      <button id="btnCreateRoom" class="btn-reset" style="margin-bottom:14px;">Crear sala nueva</button>
+      <div class="join-row">
+        <input id="joinCodeInput" maxlength="5" placeholder="CÓDIGO" autocomplete="off" spellcheck="false">
+        <button id="btnJoinRoom" class="btn-reset">Unirse</button>
+      </div>
+      <p id="lobbyStatus" class="hud-note" style="margin-top:14px;"></p>
+      <button id="btnBackFromLobby" class="btn-text">← volver</button>
+    </div>
+  </div>
+
+  <div id="onlineWaitingOverlay" class="round-overlay hidden">
+    <div class="round-card">
+      <p class="eyebrow mono">// esperando</p>
+      <h1>Comparte este código</h1>
+      <p id="roomCodeBig" class="room-code-big"></p>
+      <p class="hud-note">Esperando a que se una el cazador…</p>
+      <button id="btnCancelWaiting" class="btn-text">← cancelar</button>
     </div>
   </div>
 
@@ -61,7 +87,7 @@
     </div>
     <div class="hud-block">
       <p class="hud-label mono">nota</p>
-      <p class="hud-note">Prueba local: tú juegas primero de escondido y, cuando se acaba el tiempo, pasas a controlar al cazador. El multijugador real vendrá después.</p>
+      <p class="hud-note">Prueba local: tú juegas primero de escondido y, cuando se acaba el tiempo, pasas a controlar al cazador.</p>
     </div>
   </aside>
 </main>
