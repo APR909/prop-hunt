@@ -62,16 +62,16 @@ function roomCenter(room) {
 let floorPlan = newFloorPlan();
 let props = floorPlan.props;
 
-const hider = createPlayer(0, 0, "#E4283C");
+const hider = createPlayer(0, 0, "#1a1414");
 hider.disguise = null;
 hider.walkPhase = 0;
 hider.bobAmount = 0;
 
-const hunter = createPlayer(0, 0, "#F3EFEA");
+const hunter = createPlayer(0, 0, "#E4283C");
 hunter.walkPhase = 0;
 hunter.bobAmount = 0;
 
-const aiHider = createAIHider(createPlayer(0, 0, "#E4283C"));
+const aiHider = createAIHider(createPlayer(0, 0, "#1a1414"));
 
 let gameMode = null; // "local" | "ai" | "online"
 let mode = "hider";  // which entity local keyboard input drives (local mode only)
@@ -594,27 +594,27 @@ function loop(now) {
     if (gameMode === "local") {
       const hiderDraw = hider.disguise
         ? () => PROP_TYPES[hider.disguise].draw(ctx, hider.x, hider.y, hider.angle)
-        : () => drawPlayer(ctx, hider, "#F3EFEA", mode === "hider" ? bob : 0);
+        : () => drawPlayer(ctx, hider, "#F3EFEA", mode === "hider" ? bob : 0, hider.walkPhase, mode === "hider" ? hider.bobAmount : 0);
       if (roundPhase === "hiding") {
         drawables.push({ y: hider.y, draw: () => withTransformPop(hider.x, hider.y, hiderDraw) });
       } else if (roundPhase === "hunting") {
-        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#F3EFEA", hunterBob, hunter.walkPhase, hunter.bobAmount) });
       }
     } else if (gameMode === "ai") {
       const aiDraw = aiHider.disguise
         ? () => PROP_TYPES[aiHider.disguise].draw(ctx, aiHider.x, aiHider.y, aiHider.angle)
-        : () => drawPlayer(ctx, aiHider, "#F3EFEA", aiBob);
+        : () => drawPlayer(ctx, aiHider, "#F3EFEA", aiBob, aiHider.walkPhase, aiHider.bobAmount);
       drawables.push({ y: aiHider.y, draw: aiDraw });
       if (roundPhase !== "hiding") {
-        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#F3EFEA", hunterBob, hunter.walkPhase, hunter.bobAmount) });
       }
     } else if (gameMode === "online") {
       const hiderDraw = hider.disguise
         ? () => PROP_TYPES[hider.disguise].draw(ctx, hider.x, hider.y, hider.angle)
-        : () => drawPlayer(ctx, hider, "#F3EFEA", bob);
+        : () => drawPlayer(ctx, hider, "#F3EFEA", bob, hider.walkPhase, hider.bobAmount);
       drawables.push({ y: hider.y, draw: () => withTransformPop(hider.x, hider.y, hiderDraw) });
       if (roundPhase !== "hiding") {
-        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#E4283C", hunterBob) });
+        drawables.push({ y: hunter.y, draw: () => drawPlayer(ctx, hunter, "#F3EFEA", hunterBob, hunter.walkPhase, hunter.bobAmount) });
       }
     }
 

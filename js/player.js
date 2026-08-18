@@ -9,7 +9,7 @@ export function createPlayer(x, y, color = "#E4283C") {
   return { x, y, angle: 0, radius: PLAYER_RADIUS, color };
 }
 
-export function drawPlayer(ctx, p, headColor = "#F3EFEA", bob = 0) {
+export function drawPlayer(ctx, p, headColor = "#F3EFEA", bob = 0, walkPhase = 0, strideAmount = 0) {
   const { x, angle, radius, color } = p;
   const baseY = p.y;
   const hop = Math.abs(bob) * radius * 0.22;
@@ -27,6 +27,24 @@ export function drawPlayer(ctx, p, headColor = "#F3EFEA", bob = 0) {
   ctx.translate(x, y);
   ctx.scale(1, squash);
   ctx.translate(-x, -y);
+
+  // legs — two small feet swinging in alternating phase, drawn first so the
+  // body circle overlaps their base (they "peek out" from underneath, same
+  // trick used for the furniture props)
+  const strideLen = radius * 0.42 * strideAmount;
+  const strideSide = radius * 0.3;
+  const legPerpAngle = angle + Math.PI / 2;
+  [-1, 1].forEach((side) => {
+    const phase = walkPhase + (side > 0 ? Math.PI : 0);
+    const swing = Math.sin(phase) * strideLen;
+    const lift = Math.max(0, Math.sin(phase)) * radius * 0.08 * strideAmount;
+    const lx = x - Math.cos(angle) * (radius * 0.5 - swing) + Math.cos(legPerpAngle) * strideSide * side;
+    const ly = y - lift - Math.sin(angle) * (radius * 0.5 - swing) + Math.sin(legPerpAngle) * strideSide * side;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.beginPath();
+    ctx.ellipse(lx, ly, radius * 0.16, radius * 0.22, angle, 0, Math.PI * 2);
+    ctx.fill();
+  });
 
   // body
   ctx.fillStyle = color;
