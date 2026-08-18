@@ -37,7 +37,9 @@ export function applyFogOfWar(mainCtx, hunter, w, h) {
 
   ctx.globalCompositeOperation = "destination-out";
 
-  // near-vision circle, soft edge
+  // near-vision circle, soft edge — under destination-out only the alpha
+  // channel matters, so this stays neutral white; the actual ember tint is
+  // painted separately below, directly onto the revealed area.
   const nearGrad = ctx.createRadialGradient(hunter.x, hunter.y, NEAR_RADIUS * 0.35, hunter.x, hunter.y, NEAR_RADIUS);
   nearGrad.addColorStop(0, "rgba(255,255,255,1)");
   nearGrad.addColorStop(1, "rgba(255,255,255,0)");
@@ -61,4 +63,20 @@ export function applyFogOfWar(mainCtx, hunter, w, h) {
   ctx.globalCompositeOperation = "source-over";
 
   mainCtx.drawImage(ctx.canvas, 0, 0);
+
+  // warm ember tint over the visible area — a torch/brazier glow instead of
+  // a neutral white flashlight, painted straight onto the revealed scene
+  mainCtx.save();
+  mainCtx.globalCompositeOperation = "source-over";
+  const tintGrad = mainCtx.createRadialGradient(hunter.x, hunter.y, 0, hunter.x, hunter.y, CONE_RADIUS);
+  tintGrad.addColorStop(0, "rgba(255,150,60,0.16)");
+  tintGrad.addColorStop(0.6, "rgba(255,110,40,0.08)");
+  tintGrad.addColorStop(1, "rgba(255,90,40,0)");
+  mainCtx.fillStyle = tintGrad;
+  mainCtx.beginPath();
+  mainCtx.moveTo(hunter.x, hunter.y);
+  mainCtx.arc(hunter.x, hunter.y, CONE_RADIUS, hunter.angle - CONE_HALF_ANGLE, hunter.angle + CONE_HALF_ANGLE);
+  mainCtx.closePath();
+  mainCtx.fill();
+  mainCtx.restore();
 }

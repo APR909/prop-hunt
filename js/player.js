@@ -40,10 +40,50 @@ export function drawPlayer(ctx, p, headColor = "#F3EFEA", bob = 0) {
   // head, offset toward facing direction
   const hx = x + Math.cos(angle) * radius * 0.55;
   const hy = y + Math.sin(angle) * radius * 0.55;
+
+  // small curved horns, swept back opposite the facing direction — a
+  // lighter bone tone so they read clearly against dark floors
+  const backAngle = angle + Math.PI;
+  [-0.5, 0.5].forEach((side) => {
+    const hornBaseX = hx + Math.cos(angle + side * 1.3) * radius * 0.32;
+    const hornBaseY = hy + Math.sin(angle + side * 1.3) * radius * 0.32;
+    const hornTipX = hornBaseX + Math.cos(backAngle + side * 0.5) * radius * 0.42;
+    const hornTipY = hornBaseY + Math.sin(backAngle + side * 0.5) * radius * 0.42;
+    ctx.beginPath();
+    ctx.moveTo(hornBaseX, hornBaseY);
+    ctx.lineTo(hornTipX, hornTipY);
+    ctx.lineWidth = 3.6;
+    ctx.strokeStyle = "#c9b898";
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(hornBaseX, hornBaseY);
+    ctx.lineTo(hornTipX, hornTipY);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "#241012";
+    ctx.stroke();
+  });
+
   ctx.fillStyle = headColor;
   ctx.beginPath();
   ctx.arc(hx, hy, radius * 0.4, 0, Math.PI * 2);
   ctx.fill();
+
+  // glowing ember eyes
+  ctx.save();
+  ctx.shadowColor = "rgba(255,130,50,1)";
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = "#ff6a28";
+  const eyeOffset = radius * 0.16;
+  const perpAngle = angle + Math.PI / 2;
+  [-1, 1].forEach((side) => {
+    const ex = hx + Math.cos(angle) * radius * 0.12 + Math.cos(perpAngle) * eyeOffset * side;
+    const ey = hy + Math.sin(angle) * radius * 0.12 + Math.sin(perpAngle) * eyeOffset * side;
+    ctx.beginPath();
+    ctx.arc(ex, ey, 2.1, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
 
   ctx.restore();
 }

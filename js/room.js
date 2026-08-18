@@ -170,16 +170,40 @@ export function drawRoom(ctx, walls, tubes) {
   ctx.fillStyle = floorGrad;
   ctx.fillRect(ROOM_LEFT, ROOM_TOP, ROOM_RIGHT - ROOM_LEFT, ROOM_BOTTOM - ROOM_TOP);
 
-  // floor plank lines for a little texture
-  ctx.strokeStyle = "rgba(0,0,0,0.22)";
+  // cracked flagstone floor grid — replaces the plain wood-plank lines
+  ctx.strokeStyle = "rgba(0,0,0,0.28)";
   ctx.lineWidth = 1;
-  const plank = 46;
-  for (let x = ROOM_LEFT + plank; x < ROOM_RIGHT; x += plank) {
+  const tile = 46;
+  for (let x = ROOM_LEFT + tile; x < ROOM_RIGHT; x += tile) {
     ctx.beginPath();
     ctx.moveTo(x, ROOM_TOP);
     ctx.lineTo(x, ROOM_BOTTOM);
     ctx.stroke();
   }
+  for (let y = ROOM_TOP + tile; y < ROOM_BOTTOM; y += tile) {
+    ctx.beginPath();
+    ctx.moveTo(ROOM_LEFT, y);
+    ctx.lineTo(ROOM_RIGHT, y);
+    ctx.stroke();
+  }
+
+  // faint glowing ember seams at a handful of fixed tile intersections —
+  // deterministic (not random) so the floor doesn't flicker frame to frame
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,90,40,0.22)";
+  ctx.lineWidth = 1.4;
+  ctx.shadowColor = "rgba(255,90,40,0.5)";
+  ctx.shadowBlur = 3;
+  for (let gx = ROOM_LEFT + tile * 2; gx < ROOM_RIGHT; gx += tile * 5) {
+    for (let gy = ROOM_TOP + tile * 3; gy < ROOM_BOTTOM; gy += tile * 4) {
+      ctx.beginPath();
+      ctx.moveTo(gx - 10, gy - 6);
+      ctx.lineTo(gx + 4, gy + 3);
+      ctx.lineTo(gx - 2, gy + 12);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
 
   // inner wall trim (subtle red accent, matches the site brand)
   ctx.strokeStyle = "rgba(228,40,60,0.35)";
